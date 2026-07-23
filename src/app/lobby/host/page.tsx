@@ -154,9 +154,6 @@ function HostContent() {
               </div>
 
               <div className="space-y-2 mb-6">
-                <p className="text-sm text-cyan-100/80">
-                  Players visit <span className="font-mono text-cyan-300 font-bold">/lobby/player</span> on their mobile browser or Expo Go to enter this code.
-                </p>
                 <div className="flex items-center justify-center space-x-2 text-slate-400 text-xs font-semibold">
                   <Users className="w-4 h-4 text-purple-400" />
                   <span>{room?.players.length || 0} Player(s) Joined</span>

@@ -100,7 +100,7 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
                   : "bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50"
               } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
             >
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {level.icon}
                   <span className="font-black text-sm text-white">
@@ -117,9 +117,6 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
                   {level.badge}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-300/80 leading-snug font-medium">
-                {level.description}
-              </p>
             </button>
           );
         })}
