@@ -50,39 +50,46 @@ app.prepare().then(() => {
   io.on('connection', (socket) => {
     console.log('A client connected:', socket.id);
 
-    // Host creates a room (supports 'create_room' and 'host:create-room')
+    // Host creates or reconnects to a room (supports 'create_room' and 'host:create-room')
     const handleCreateRoom = (settings, callback) => {
       let roomCode = settings?.roomCode?.toUpperCase()?.trim();
-      if (!roomCode || rooms.has(roomCode)) {
-        do {
-          roomCode = generateRoomCode();
-        } while (rooms.has(roomCode));
+      let room = roomCode ? rooms.get(roomCode) : null;
+
+      if (!room) {
+        if (!roomCode) {
+          do {
+            roomCode = generateRoomCode();
+          } while (rooms.has(roomCode));
+        }
+
+        room = {
+          roomCode,
+          hostId: socket.id,
+          settings: {
+            timerDuration: settings?.timerDuration || 30, // 15, 30, 45
+            hintDelay: settings?.hintDelay || 5,
+            categoryFilter: settings?.categoryFilter || 'All' // Hymns, Modern Worship, Gospel, Kids Worship
+          },
+          players: [],
+          gameState: {
+            status: 'lobby', // lobby, playing, paused, ended
+            currentTurnIndex: 0,
+            buzzedPlayerId: null,
+            timeRemaining: settings?.timerDuration || 30
+          }
+        };
+
+        rooms.set(roomCode, room);
+      } else {
+        room.hostId = socket.id;
       }
 
-      const newRoom = {
-        roomCode,
-        hostId: socket.id,
-        settings: {
-          timerDuration: settings?.timerDuration || 30, // 15, 30, 45
-          hintDelay: settings?.hintDelay || 5,
-          categoryFilter: settings?.categoryFilter || 'All' // Hymns, Modern Worship, Gospel, Kids Worship
-        },
-        players: [],
-        gameState: {
-          status: 'lobby', // lobby, playing, paused, ended
-          currentTurnIndex: 0,
-          buzzedPlayerId: null,
-          timeRemaining: settings?.timerDuration || 30
-        }
-      };
-
-      rooms.set(roomCode, newRoom);
       socket.join(roomCode);
       
-      console.log(`Room created: ${roomCode} by host ${socket.id}`);
+      console.log(`Room active: ${roomCode} | Host: ${socket.id} | Players: ${room.players.length}`);
       
       if (typeof callback === 'function') {
-        callback({ success: true, roomCode, room: newRoom });
+        callback({ success: true, roomCode, room });
       }
     };
 
