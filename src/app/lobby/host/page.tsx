@@ -34,6 +34,7 @@ function HostContent() {
   const [timerDuration, setTimerDuration] = useState<number>(30);
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [usedWordIds, setUsedWordIds] = useState<Set<string>>(new Set());
+  const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
 
   // Initialize Host Room
   useEffect(() => {
@@ -48,14 +49,14 @@ function HostContent() {
 
   // Load new word when game starts or turns change
   useEffect(() => {
-    if (room?.gameState.status === 'playing' && !currentWord) {
+    if ((isGameStarted || room?.gameState.status === 'playing') && !currentWord) {
       const word = getRandomWord(Array.from(usedWordIds), categoryFilter as any);
       if (word) {
         setCurrentWord(word);
         setUsedWordIds((prev) => new Set(prev).add(word.id));
       }
     }
-  }, [room?.gameState.status]);
+  }, [room?.gameState.status, isGameStarted]);
 
   // Handle buzzer SFX
   useEffect(() => {
@@ -65,12 +66,13 @@ function HostContent() {
   }, [buzzedInfo]);
 
   const handleStartGame = () => {
+    setIsGameStarted(true);
+    const word = getRandomWord(Array.from(usedWordIds), categoryFilter as any);
+    if (word) {
+      setCurrentWord(word);
+      setUsedWordIds((prev) => new Set(prev).add(word.id));
+    }
     if (roomCode) {
-      const word = getRandomWord(Array.from(usedWordIds), categoryFilter as any);
-      if (word) {
-        setCurrentWord(word);
-        setUsedWordIds((prev) => new Set(prev).add(word.id));
-      }
       startGame(roomCode);
     }
   };
@@ -92,7 +94,7 @@ function HostContent() {
       <PartyNavbar modeName="Host TV Screen" />
 
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col items-center justify-between z-10 space-y-6">
-        {!room || room.gameState.status === 'lobby' ? (
+        {!isGameStarted && (!room || room.gameState.status === 'lobby') ? (
           /* Host Lobby Screen */
           <div className="w-full flex flex-col items-center justify-center text-center space-y-8 my-auto py-12">
             <motion.div

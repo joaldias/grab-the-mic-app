@@ -133,9 +133,9 @@ app.prepare().then(() => {
     socket.on('update_settings', ({ roomCode, settings }) => {
       const code = (roomCode || '').toUpperCase().trim();
       const room = rooms.get(code);
-      if (room && room.hostId === socket.id) {
+      if (room) {
         room.settings = { ...room.settings, ...settings };
-        if (room.gameState.status === 'lobby' && settings.timerDuration) {
+        if (room.gameState.status === 'lobby' && settings?.timerDuration) {
           room.gameState.timeRemaining = settings.timerDuration;
         }
         io.to(code).emit('room_updated', room);
@@ -146,9 +146,11 @@ app.prepare().then(() => {
     socket.on('start_game', ({ roomCode }) => {
       const code = (roomCode || '').toUpperCase().trim();
       const room = rooms.get(code);
-      if (room && room.hostId === socket.id) {
+      if (room) {
+        room.hostId = socket.id;
         room.gameState.status = 'playing';
         io.to(code).emit('game_started', room);
+        io.to(code).emit('room_updated', room);
       }
     });
 
