@@ -145,12 +145,9 @@ export default function Home() {
                   <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                     {mode.icon}
                   </motion.div>
-                  <h2 className="text-xl font-black text-white mb-2 group-hover:text-cyan-300 transition-colors text-center">
+                  <h2 className="text-xl font-black text-white group-hover:text-cyan-300 transition-colors text-center">
                     {mode.name}
                   </h2>
-                  <p className="text-xs text-slate-400 text-center font-medium">
-                    {mode.desc}
-                  </p>
                 </div>
               </button>
             </motion.div>
