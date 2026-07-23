@@ -17,6 +17,8 @@ import { TimerSelector } from "@/components/TimerSelector";
 import { LevelSelector } from "@/components/LevelSelector";
 import { LanguageSelector, Language } from "@/components/LanguageSelector";
 
+const LANG_KEY = "gtm_language";
+
 function GameContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,8 +30,24 @@ function GameContent() {
   const [language, setLanguage] = useState<Language>("en");
   const [showCountdown, setShowCountdown] = useState<boolean>(true);
   const [gameState, setGameState] = useState<"ready" | "playing" | "buzz" | "timeout" | "ended">("ready");
-  
+
   const [timeRemaining, setTimeRemaining] = useState<number>(30);
+
+  const isEN = language === "en";
+
+  // Load language from the ?lang= query param (appended by the landing page),
+  // falling back to any previously persisted choice.
+  useEffect(() => {
+    const fromQuery = searchParams.get("lang");
+    if (fromQuery === "pt" || fromQuery === "en") {
+      setLanguage(fromQuery);
+      if (typeof window !== "undefined") localStorage.setItem(LANG_KEY, fromQuery);
+      return;
+    }
+    const stored = (typeof window !== "undefined" ? localStorage.getItem(LANG_KEY) : null) as Language | null;
+    if (stored === "pt" || stored === "en") setLanguage(stored);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleTimerChange = (newDuration: number) => {
     setTimerDuration(newDuration);
@@ -152,12 +170,19 @@ function GameContent() {
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/30 via-slate-950 to-slate-950 pointer-events-none"></div>
 
       <PartyNavbar
-        modeName={mode === "pass" ? "Pass The Phone" : "Practice Mode"}
+        modeName={
+          mode === "pass"
+            ? isEN ? "Pass The Phone" : "Passa o Telemóvel"
+            : isEN ? "Practice Mode" : "Modo Treino"
+        }
         onResetGame={handleResetGame}
+        language={language}
       />
 
       {/* 3s Countdown Overlay */}
-      {showCountdown && <CountdownOverlay onComplete={handleCountdownComplete} countFrom={3} />}
+      {showCountdown && (
+        <CountdownOverlay onComplete={handleCountdownComplete} countFrom={3} language={language} />
+      )}
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6 flex flex-col items-center justify-between z-10 space-y-6">
         {/* Scoreboard (Only in Pass-the-Phone mode) */}
@@ -166,6 +191,7 @@ function GameContent() {
             players={players}
             currentTurnIndex={currentTurnIndex}
             onUpdateScore={handleUpdateScore}
+            language={language}
           />
         )}
 
@@ -176,6 +202,7 @@ function GameContent() {
               selectedLanguage={language}
               onSelectLanguage={(lang) => {
                 setLanguage(lang);
+                if (typeof window !== "undefined") localStorage.setItem(LANG_KEY, lang);
                 const word = getRandomWord(Array.from(usedWordIds), selectedDifficulty as any, lang);
                 if (word) setCurrentWord(word);
               }}
@@ -184,10 +211,12 @@ function GameContent() {
           <LevelSelector
             selectedLevel={selectedDifficulty}
             onSelectLevel={handleLevelChange}
+            language={language}
           />
           <TimerSelector
             selectedDuration={timerDuration}
             onSelectDuration={handleTimerChange}
+            language={language}
           />
         </div>
 
@@ -206,9 +235,12 @@ function GameContent() {
             wordEntry={currentWord}
             onNextWord={() => nextTurnWord(false)}
             disabled={gameState !== "playing"}
+            language={language}
           />
         ) : (
-          <div className="p-8 text-center text-slate-400">Loading Word...</div>
+          <div className="p-8 text-center text-slate-400">
+            {isEN ? "Loading Word..." : "A carregar palavra..."}
+          </div>
         )}
 
         {/* Action Controls (Grabbed Mic / Correct / Passed / Time-out) */}
@@ -220,7 +252,7 @@ function GameContent() {
                 className="w-full sm:w-1/2 py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-lg shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-all active:scale-95 flex items-center justify-center space-x-2"
               >
                 <CheckCircle className="w-6 h-6" />
-                <span>Sung It Correctly (+1)</span>
+                <span>{isEN ? "Sung It Correctly (+1)" : "Cantei Corretamente (+1)"}</span>
               </button>
 
               <button
@@ -228,7 +260,7 @@ function GameContent() {
                 className="w-full sm:w-1/2 py-4 px-6 rounded-2xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-lg border border-cyan-500/30 transition-all active:scale-95 flex items-center justify-center space-x-2"
               >
                 <FastForward className="w-6 h-6" />
-                <span>Pass Turn ➔</span>
+                <span>{isEN ? "Pass Turn ➔" : "Passar Vez ➔"}</span>
               </button>
             </>
           )}
@@ -240,16 +272,18 @@ function GameContent() {
               className="w-full p-6 rounded-2xl bg-rose-950/80 border border-rose-500/50 text-center space-y-4 shadow-[0_0_30px_rgba(244,63,94,0.4)]"
             >
               <h3 className="text-3xl font-black text-rose-400 uppercase tracking-tight">
-                TIME'S UP! 🔔
+                {isEN ? "TIME'S UP! 🔔" : "TEMPO ESGOTADO! 🔔"}
               </h3>
               <p className="text-sm text-rose-200/80">
-                Nobody grabbed the mic in time. Ready for the next word?
+                {isEN
+                  ? "Nobody grabbed the mic in time. Ready for the next word?"
+                  : "Ninguém agarrou o microfone a tempo. Pronto para a próxima palavra?"}
               </p>
               <button
                 onClick={() => nextTurnWord(true)}
                 className="px-8 py-3 rounded-xl bg-rose-500 hover:bg-rose-400 text-slate-950 font-extrabold text-base shadow-lg transition-all active:scale-95"
               >
-                Next Turn ➔
+                {isEN ? "Next Turn ➔" : "Próxima Vez ➔"}
               </button>
             </motion.div>
           )}
@@ -267,15 +301,32 @@ function GameContent() {
       </main>
 
       <footer className="w-full py-4 text-center text-xs text-slate-500 font-medium z-10 border-t border-slate-900">
-        Grab The Mic! (Christian Edition) • Powered by iTunes & Web Audio API
+        {isEN
+          ? "Grab The Mic! (Christian Edition) • Powered by iTunes & Web Audio API"
+          : "Grab The Mic! (Edição Cristã) • Fornecido por iTunes e Web Audio API"}
       </footer>
+    </div>
+  );
+}
+
+function GameLoadingFallback() {
+  const [isEN, setIsEN] = useState(true);
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem(LANG_KEY) : null;
+    setIsEN(stored !== "pt");
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center text-cyan-400">
+      {isEN ? "Loading Game..." : "A carregar jogo..."}
     </div>
   );
 }
 
 export default function GamePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-cyan-400">Loading Game...</div>}>
+    <Suspense fallback={<GameLoadingFallback />}>
       <GameContent />
     </Suspense>
   );

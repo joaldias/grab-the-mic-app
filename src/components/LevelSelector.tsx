@@ -3,6 +3,7 @@
 import React from "react";
 import { Sparkles, Shield, Flame, Trophy, Layers } from "lucide-react";
 import { Difficulty } from "@/lib/musicData";
+import { Language } from "@/components/LanguageSelector";
 
 export interface LevelOption {
   key: string;
@@ -62,32 +63,46 @@ export const LEVEL_OPTIONS: LevelOption[] = [
   },
 ];
 
+const LEVEL_TRANSLATIONS: Record<string, { name: string; badge: string }> = {
+  All: { name: "Todos os Níveis", badge: "TODOS" },
+  Easy: { name: "Nível Fácil", badge: "FÁCIL" },
+  Medium: { name: "Nível Médio", badge: "MÉDIO" },
+  Hard: { name: "Nível Difícil", badge: "DIFÍCIL" },
+  Challenge: { name: "Nível Desafio", badge: "EXPERT" },
+};
+
 interface LevelSelectorProps {
   selectedLevel: string;
   onSelectLevel: (level: string) => void;
   disabled?: boolean;
+  language?: Language;
 }
 
 export const LevelSelector: React.FC<LevelSelectorProps> = ({
   selectedLevel,
   onSelectLevel,
   disabled = false,
+  language = "en",
 }) => {
+  const isEN = language === "en";
+
   return (
     <div className="w-full space-y-3">
       <div className="flex items-center justify-between">
         <label className="text-xs uppercase font-extrabold text-cyan-400 tracking-wider flex items-center gap-1.5">
           <Sparkles className="w-4 h-4" />
-          <span>Difficulty Level</span>
+          <span>{isEN ? "Difficulty Level" : "Nível de Dificuldade"}</span>
         </label>
         <span className="text-xs text-slate-400 font-medium">
-          Select word difficulty
+          {isEN ? "Select word difficulty" : "Escolhe a dificuldade das palavras"}
         </span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
         {LEVEL_OPTIONS.map((level) => {
           const isSelected = selectedLevel === level.key;
+          const label = isEN ? level.name : LEVEL_TRANSLATIONS[level.key]?.name ?? level.name;
+          const badgeLabel = isEN ? level.badge : LEVEL_TRANSLATIONS[level.key]?.badge ?? level.badge;
           return (
             <button
               key={level.key}
@@ -104,7 +119,7 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
                 <div className="flex items-center gap-2">
                   {level.icon}
                   <span className="font-black text-sm text-white">
-                    {level.name}
+                    {label}
                   </span>
                 </div>
                 <span
@@ -114,7 +129,7 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
                       : "bg-slate-800 border-slate-700 text-slate-400"
                   }`}
                 >
-                  {level.badge}
+                  {badgeLabel}
                 </span>
               </div>
             </button>

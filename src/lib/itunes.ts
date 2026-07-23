@@ -160,12 +160,34 @@ export async function fetchSongHintsWithFallback(
   // 1. Get verified offline hints (guaranteed baseline)
   const offlineHints = getOfflineSongHints(wordText);
 
+  // Whether this word has a curated entry in either word bank (English WORD_BANK
+  // or Portuguese WORSHIP_WORDS_PT), as opposed to the generic hardcoded fallback
+  // used for unrecognized/custom words.
+  const hasCuratedEntry = !!getWordByText(wordText);
+
   if (!enableItunes) {
     return offlineHints.slice(0, maxResults);
   }
 
+  if (hasCuratedEntry) {
+    // Curated hints (including Portuguese Psaltério/Hinário songs) are the
+    // reliable baseline for known words. Only enrich them with iTunes
+    // preview/artwork metadata here - never mix in unrelated live iTunes
+    // search results, which would dilute (or bury) the curated list with
+    // random, unrelated matches.
+    try {
+      const enrichedOfflineHints = await Promise.all(
+        offlineHints.slice(0, maxResults).map((s) => enrichSongHintWithItunes(s, Math.min(timeoutMs, 2500)))
+      );
+      return enrichedOfflineHints;
+    } catch (err) {
+      return offlineHints.slice(0, maxResults);
+    }
+  }
+
   try {
-    // 2. Concurrently attempt iTunes live search and song enrichment
+    // 2. For unrecognized/custom words, concurrently attempt iTunes live search
+    //    and generic offline fallback enrichment.
     const [liveSearchHints, enrichedOfflineHints] = await Promise.all([
       searchItunesSongs(wordText, maxResults, timeoutMs),
       Promise.all(

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Zap, Timer, Smile, Hourglass } from "lucide-react";
+import { Language } from "@/components/LanguageSelector";
 
 export interface TimerOption {
   duration: number;
@@ -52,32 +53,45 @@ export const TIMER_PRESETS: TimerOption[] = [
   },
 ];
 
+const TIMER_TRANSLATIONS: Record<number, { name: string; badge: string }> = {
+  15: { name: "Modo Blitz", badge: "15s" },
+  30: { name: "Modo Padrão", badge: "30s" },
+  45: { name: "Modo Relaxado", badge: "45s" },
+  60: { name: "Modo Maratona", badge: "60s" },
+};
+
 interface TimerSelectorProps {
   selectedDuration: number;
   onSelectDuration: (duration: number) => void;
   disabled?: boolean;
+  language?: Language;
 }
 
 export const TimerSelector: React.FC<TimerSelectorProps> = ({
   selectedDuration,
   onSelectDuration,
   disabled = false,
+  language = "en",
 }) => {
+  const isEN = language === "en";
+
   return (
     <div className="w-full space-y-3">
       <div className="flex items-center justify-between">
         <label className="text-xs uppercase font-extrabold text-cyan-400 tracking-wider flex items-center gap-1.5">
           <Timer className="w-4 h-4" />
-          <span>Timer Preset</span>
+          <span>{isEN ? "Timer Preset" : "Predefinição de Tempo"}</span>
         </label>
         <span className="text-xs text-slate-400 font-medium">
-          Select round duration
+          {isEN ? "Select round duration" : "Escolhe a duração da ronda"}
         </span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {TIMER_PRESETS.map((preset) => {
           const isSelected = selectedDuration === preset.duration;
+          const label = isEN ? preset.name : TIMER_TRANSLATIONS[preset.duration]?.name ?? preset.name;
+          const badgeLabel = isEN ? preset.badge : TIMER_TRANSLATIONS[preset.duration]?.badge ?? preset.badge;
           return (
             <button
               key={preset.duration}
@@ -94,7 +108,7 @@ export const TimerSelector: React.FC<TimerSelectorProps> = ({
                 <div className="flex items-center gap-2">
                   {preset.icon}
                   <span className="font-black text-sm text-white">
-                    {preset.name}
+                    {label}
                   </span>
                 </div>
                 <span
@@ -104,7 +118,7 @@ export const TimerSelector: React.FC<TimerSelectorProps> = ({
                       : "bg-slate-800 border-slate-700 text-slate-400"
                   }`}
                 >
-                  {preset.badge}
+                  {badgeLabel}
                 </span>
               </div>
             </button>

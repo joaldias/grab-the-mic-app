@@ -4,7 +4,18 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle, Play, Pause, Music, ExternalLink, RefreshCw, Volume2 } from "lucide-react";
 import { SongHint } from "@/lib/musicData";
+import { WORSHIP_WORDS_PT } from "@/lib/musicDataPT";
 import { fetchSongHintsWithFallback } from "@/lib/itunes";
+
+/**
+ * Detects whether a given word text belongs to the Portuguese Psaltério
+ * word bank, so this self-contained component can translate its own UI
+ * strings without requiring a language prop from its callers.
+ */
+function isPortugueseWord(wordText: string): boolean {
+  const normalized = wordText.trim().toLowerCase();
+  return WORSHIP_WORDS_PT.some((w) => w.word.toLowerCase() === normalized);
+}
 
 interface SongHintAccordionProps {
   word: string;
@@ -24,6 +35,8 @@ export const SongHintAccordion: React.FC<SongHintAccordionProps> = ({
   const [loading, setLoading] = useState(false);
   const [playingSongId, setPlayingSongId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const isPT = isPortugueseWord(word);
 
   // Auto-reveal hints when elapsed time exceeds autoRevealDelaySeconds
   const elapsedTime = totalTime - timeRemaining;
@@ -79,16 +92,18 @@ export const SongHintAccordion: React.FC<SongHintAccordionProps> = ({
           <div className="flex items-center space-x-3">
             <HelpCircle className="w-5 h-5 text-purple-400" />
             <span className="font-bold text-white text-base">
-              Need a Song Hint?
+              {isPT ? "Precisa de uma Dica Musical?" : "Need a Song Hint?"}
             </span>
             {isAutoUnlocked && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30">
-                Unlocked
+                {isPT ? "Desbloqueado" : "Unlocked"}
               </span>
             )}
           </div>
           <span className="text-xs font-semibold text-cyan-400">
-            {isOpen ? "Hide Hints ▲" : "Show Hints ▼"}
+            {isOpen
+              ? (isPT ? "Ocultar Dicas ▲" : "Hide Hints ▲")
+              : (isPT ? "Mostrar Dicas ▼" : "Show Hints ▼")}
           </span>
         </button>
 
@@ -104,12 +119,14 @@ export const SongHintAccordion: React.FC<SongHintAccordionProps> = ({
             >
               {!isAutoUnlocked && !isOpen ? (
                 <p className="text-sm text-slate-400 italic text-center">
-                  Hint unlocks in {Math.max(0, autoRevealDelaySeconds - elapsedTime)} seconds...
+                  {isPT
+                    ? `Dica desbloqueia em ${Math.max(0, autoRevealDelaySeconds - elapsedTime)} segundos...`
+                    : `Hint unlocks in ${Math.max(0, autoRevealDelaySeconds - elapsedTime)} seconds...`}
                 </p>
               ) : loading ? (
                 <div className="flex items-center justify-center py-4 text-cyan-400 text-sm font-medium">
                   <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                  Fetching song recommendations...
+                  {isPT ? "Buscando recomendações de músicas..." : "Fetching song recommendations..."}
                 </div>
               ) : (
                 <div className="space-y-3">

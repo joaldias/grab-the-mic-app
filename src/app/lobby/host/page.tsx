@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Tv, Play, CheckCircle, RotateCcw, Volume2, ShieldAlert, Sparkles, Mic } from "lucide-react";
 
@@ -18,8 +18,11 @@ import { TimerSelector } from "@/components/TimerSelector";
 import { LevelSelector } from "@/components/LevelSelector";
 import { LanguageSelector, Language } from "@/components/LanguageSelector";
 
+const LANG_KEY = "gtm_language";
+
 function HostContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     connected,
     room,
@@ -41,6 +44,22 @@ function HostContent() {
   const [language, setLanguage] = useState<Language>("en");
   const [usedWordIds, setUsedWordIds] = useState<Set<string>>(new Set());
   const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
+
+  const isEN = language === "en";
+
+  // Load language from the ?lang= query param (appended by the landing page),
+  // falling back to any previously persisted choice.
+  useEffect(() => {
+    const fromQuery = searchParams.get("lang");
+    if (fromQuery === "pt" || fromQuery === "en") {
+      setLanguage(fromQuery);
+      if (typeof window !== "undefined") localStorage.setItem(LANG_KEY, fromQuery);
+      return;
+    }
+    const stored = (typeof window !== "undefined" ? localStorage.getItem(LANG_KEY) : null) as Language | null;
+    if (stored === "pt" || stored === "en") setLanguage(stored);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Initialize Host Room (preserve roomCode across reconnects)
   useEffect(() => {
@@ -128,7 +147,10 @@ function HostContent() {
     <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between overflow-x-hidden relative">
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-950/40 via-slate-950 to-slate-950 pointer-events-none"></div>
 
-      <PartyNavbar modeName="Host TV Screen" />
+      <PartyNavbar
+        modeName={isEN ? "Host TV Screen" : "Ecrã do Anfitrião (TV)"}
+        language={language}
+      />
 
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col items-center justify-between z-10 space-y-6">
         {!isGameStarted && (!room || room.gameState.status === 'lobby') ? (
@@ -141,12 +163,12 @@ function HostContent() {
             >
               <Tv className="w-16 h-16 mx-auto mb-4 text-cyan-400 animate-pulse" />
               <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
-                JOIN ON MOBILE
+                {isEN ? "JOIN ON MOBILE" : "ENTRA PELO TELEMÓVEL"}
               </h1>
 
               <div className="my-6 p-6 rounded-2xl bg-slate-950 border border-cyan-500/30">
                 <span className="text-xs uppercase font-extrabold text-cyan-400 tracking-widest block mb-2">
-                  ROOM CODE
+                  {isEN ? "ROOM CODE" : "CÓDIGO DA SALA"}
                 </span>
                 <span className="text-6xl md:text-7xl font-black tracking-widest text-cyan-300 font-mono drop-shadow-[0_0_20px_rgba(0,240,255,0.6)]">
                   {roomCode || "----"}
@@ -156,7 +178,11 @@ function HostContent() {
               <div className="space-y-2 mb-6">
                 <div className="flex items-center justify-center space-x-2 text-slate-400 text-xs font-semibold">
                   <Users className="w-4 h-4 text-purple-400" />
-                  <span>{room?.players.length || 0} Player(s) Joined</span>
+                  <span>
+                    {isEN
+                      ? `${room?.players.length || 0} Player(s) Joined`
+                      : `${room?.players.length || 0} Jogador(es) na Sala`}
+                  </span>
                 </div>
               </div>
 
@@ -180,6 +206,7 @@ function HostContent() {
                     selectedLanguage={language}
                     onSelectLanguage={(lang) => {
                       setLanguage(lang);
+                      if (typeof window !== "undefined") localStorage.setItem(LANG_KEY, lang);
                       setCurrentWord(null);
                     }}
                   />
@@ -188,11 +215,13 @@ function HostContent() {
                 <LevelSelector
                   selectedLevel={categoryFilter}
                   onSelectLevel={handleCategoryChange}
+                  language={language}
                 />
 
                 <TimerSelector
                   selectedDuration={timerDuration}
                   onSelectDuration={handleTimerChange}
+                  language={language}
                 />
               </div>
 
@@ -201,7 +230,7 @@ function HostContent() {
                 className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-400 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-slate-950 font-black text-xl shadow-[0_0_30px_rgba(0,240,255,0.6)] transition-all active:scale-95 flex items-center justify-center space-x-3 cursor-pointer"
               >
                 <Play className="w-6 h-6 fill-current" />
-                <span>START PARTY GAME</span>
+                <span>{isEN ? "START PARTY GAME" : "COMEÇAR JOGO"}</span>
               </button>
             </motion.div>
           </div>
@@ -218,7 +247,8 @@ function HostContent() {
                   className="w-full p-6 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white text-center shadow-[0_0_40px_rgba(255,0,127,0.8)] border border-pink-400 z-30"
                 >
                   <h2 className="text-3xl md:text-5xl font-black tracking-tight uppercase animate-bounce">
-                    🎤 {buzzedInfo.playerName} GRABBED THE MIC!
+                    🎤 {buzzedInfo.playerName}{" "}
+                    {isEN ? "GRABBED THE MIC!" : "AGARROU O MICROFONE!"}
                   </h2>
                   <div className="flex items-center justify-center space-x-4 mt-4">
                     <button
@@ -229,13 +259,13 @@ function HostContent() {
                       }}
                       className="px-6 py-2.5 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-base hover:bg-emerald-300 transition-all"
                     >
-                      Correct (+1 Pt)
+                      {isEN ? "Correct (+1 Pt)" : "Correto (+1 Pt)"}
                     </button>
                     <button
                       onClick={() => clearBuzz(roomCode)}
                       className="px-6 py-2.5 rounded-xl bg-slate-900/80 text-rose-300 font-extrabold text-base hover:bg-slate-900 transition-all border border-rose-500/50"
                     >
-                      Clear Buzz ✖
+                      {isEN ? "Clear Buzz ✖" : "Limpar Toque ✖"}
                     </button>
                   </div>
                 </motion.div>
@@ -246,6 +276,7 @@ function HostContent() {
               players={room?.players || []}
               currentTurnIndex={room?.gameState?.currentTurnIndex || 0}
               onUpdateScore={(id, delta) => updateScore(roomCode, id, delta)}
+              language={language}
             />
 
             <CircularTimer
@@ -253,13 +284,13 @@ function HostContent() {
               totalTime={room?.settings?.timerDuration ?? 30}
             />
 
-            {currentWord && <WordCard wordEntry={currentWord} />}
+            {currentWord && <WordCard wordEntry={currentWord} language={language} />}
 
             <button
               onClick={handleNextTurn}
               className="px-8 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold border border-cyan-500/40 transition-all active:scale-95"
             >
-              Next Word / Turn ➔
+              {isEN ? "Next Word / Turn ➔" : "Próxima Palavra / Turno ➔"}
             </button>
 
             {currentWord && (
@@ -276,9 +307,24 @@ function HostContent() {
   );
 }
 
+function HostLoadingFallback() {
+  const [isEN, setIsEN] = useState(true);
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem(LANG_KEY) : null;
+    setIsEN(stored !== "pt");
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center text-cyan-400">
+      {isEN ? "Loading Host Screen..." : "A carregar ecrã do anfitrião..."}
+    </div>
+  );
+}
+
 export default function HostPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-cyan-400">Loading Host Screen...</div>}>
+    <Suspense fallback={<HostLoadingFallback />}>
       <HostContent />
     </Suspense>
   );

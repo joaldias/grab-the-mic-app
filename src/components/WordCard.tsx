@@ -4,14 +4,17 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Sparkles, ShieldAlert, Zap, Flame, Award } from "lucide-react";
 import { Difficulty, WordEntry } from "@/lib/musicData";
+import { Language } from "@/components/LanguageSelector";
 
 interface WordCardProps {
   wordEntry: WordEntry;
   onNextWord?: () => void;
   disabled?: boolean;
+  language?: Language;
 }
 
-export const WordCard: React.FC<WordCardProps> = ({ wordEntry, onNextWord, disabled }) => {
+export const WordCard: React.FC<WordCardProps> = ({ wordEntry, onNextWord, disabled, language = "en" }) => {
+  const isEN = language === "en";
   const getDifficultyBadge = (difficulty: Difficulty) => {
     switch (difficulty) {
       case "Easy":
@@ -74,7 +77,9 @@ export const WordCard: React.FC<WordCardProps> = ({ wordEntry, onNextWord, disab
         </h2>
 
         <p className="text-sm text-cyan-100/70 font-medium z-10">
-          Sing or quote a worship song containing this exact word!
+          {isEN
+            ? "Sing or quote a worship song containing this exact word!"
+            : "Canta ou cita um louvor que contenha exatamente esta palavra!"}
         </p>
 
         {onNextWord && (
@@ -83,7 +88,7 @@ export const WordCard: React.FC<WordCardProps> = ({ wordEntry, onNextWord, disab
             disabled={disabled}
             className="mt-6 z-10 px-5 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-cyan-300 text-sm font-semibold border border-cyan-500/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
           >
-            Skip Word ➔
+            {isEN ? "Skip Word ➔" : "Saltar Palavra ➔"}
           </button>
         )}
       </div>

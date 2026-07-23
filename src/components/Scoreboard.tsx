@@ -3,6 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Trophy, Plus, Minus, Flame, UserCheck } from "lucide-react";
+import { Language } from "@/components/LanguageSelector";
 
 export interface PlayerScore {
   id: string;
@@ -15,6 +16,7 @@ interface ScoreboardProps {
   currentTurnIndex?: number;
   onUpdateScore?: (playerId: string, delta: number) => void;
   interactive?: boolean;
+  language?: Language;
 }
 
 export const Scoreboard: React.FC<ScoreboardProps> = ({
@@ -22,7 +24,9 @@ export const Scoreboard: React.FC<ScoreboardProps> = ({
   currentTurnIndex = 0,
   onUpdateScore,
   interactive = true,
+  language = "en",
 }) => {
+  const isEN = language === "en";
   return (
     <div className="w-full max-w-xl mx-auto my-4">
       <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-xl shadow-lg">
@@ -30,11 +34,13 @@ export const Scoreboard: React.FC<ScoreboardProps> = ({
           <div className="flex items-center space-x-2">
             <Trophy className="w-5 h-5 text-amber-400" />
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-              Live Scoreboard
+              {isEN ? "Live Scoreboard" : "Placar ao Vivo"}
             </h3>
           </div>
           <span className="text-xs font-semibold text-slate-400">
-            {players.length} Teams / Players
+            {isEN
+              ? `${players.length} Teams / Players`
+              : `${players.length} Equipas / Jogadores`}
           </span>
         </div>
 
@@ -67,7 +73,7 @@ export const Scoreboard: React.FC<ScoreboardProps> = ({
                     </h4>
                     {isActive && (
                       <span className="text-[10px] uppercase tracking-widest font-extrabold text-cyan-400">
-                        Current Turn
+                        {isEN ? "Current Turn" : "Vez Atual"}
                       </span>
                     )}
                   </div>
@@ -83,14 +89,14 @@ export const Scoreboard: React.FC<ScoreboardProps> = ({
                       <button
                         onClick={() => onUpdateScore(player.id, 1)}
                         className="p-1 rounded-md bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 border border-emerald-500/40 transition-all active:scale-90"
-                        title="Add Point (+1)"
+                        title={isEN ? "Add Point (+1)" : "Adicionar Ponto (+1)"}
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => onUpdateScore(player.id, -1)}
                         className="p-1 rounded-md bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 border border-rose-500/40 transition-all active:scale-90"
-                        title="Subtract Point (-1)"
+                        title={isEN ? "Subtract Point (-1)" : "Subtrair Ponto (-1)"}
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>

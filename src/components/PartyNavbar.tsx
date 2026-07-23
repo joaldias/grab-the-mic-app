@@ -4,13 +4,16 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Mic, Volume2, VolumeX, Home, Settings, RotateCcw } from "lucide-react";
 import { audioEngine } from "@/lib/audio";
+import { Language } from "@/components/LanguageSelector";
 
 interface PartyNavbarProps {
   modeName: string;
   onResetGame?: () => void;
+  language?: Language;
 }
 
-export const PartyNavbar: React.FC<PartyNavbarProps> = ({ modeName, onResetGame }) => {
+export const PartyNavbar: React.FC<PartyNavbarProps> = ({ modeName, onResetGame, language = "en" }) => {
+  const isEN = language === "en";
   const [soundOn, setSoundOn] = useState(audioEngine.isSoundEnabled());
 
   const toggleSound = () => {
@@ -36,7 +39,7 @@ export const PartyNavbar: React.FC<PartyNavbarProps> = ({ modeName, onResetGame 
           <button
             onClick={onResetGame}
             className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all active:scale-95 border border-slate-700"
-            title="Reset Game"
+            title={isEN ? "Reset Game" : "Reiniciar Jogo"}
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -49,7 +52,11 @@ export const PartyNavbar: React.FC<PartyNavbarProps> = ({ modeName, onResetGame 
               ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-300"
               : "bg-slate-800 border-slate-700 text-slate-500"
           }`}
-          title={soundOn ? "Mute Sound Effects" : "Enable Sound Effects"}
+          title={
+            soundOn
+              ? isEN ? "Mute Sound Effects" : "Silenciar Efeitos Sonoros"
+              : isEN ? "Enable Sound Effects" : "Ativar Efeitos Sonoros"
+          }
         >
           {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
         </button>
@@ -57,7 +64,7 @@ export const PartyNavbar: React.FC<PartyNavbarProps> = ({ modeName, onResetGame 
         <Link
           href="/"
           className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all active:scale-95 border border-slate-700"
-          title="Return to Home"
+          title={isEN ? "Return to Home" : "Voltar ao Início"}
         >
           <Home className="w-4 h-4" />
         </Link>

@@ -3,15 +3,18 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { audioEngine } from "@/lib/audio";
+import { Language } from "@/components/LanguageSelector";
 
 interface CountdownOverlayProps {
   onComplete: () => void;
   countFrom?: number;
+  language?: Language;
 }
 
 export const CountdownOverlay: React.FC<CountdownOverlayProps> = ({
   onComplete,
   countFrom = 3,
+  language = "en",
 }) => {
   const [count, setCount] = useState<number | string>(countFrom);
 
@@ -25,7 +28,7 @@ export const CountdownOverlay: React.FC<CountdownOverlayProps> = ({
         setCount(current);
         audioEngine.playCountdownBeep(false);
       } else if (current === 0) {
-        setCount("GRAB THE MIC!");
+        setCount(language === "en" ? "GRAB THE MIC!" : "PEGA NO MICROFONE!");
         audioEngine.playCountdownBeep(true);
       } else {
         clearInterval(interval);
@@ -34,7 +37,7 @@ export const CountdownOverlay: React.FC<CountdownOverlayProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [countFrom, onComplete]);
+  }, [countFrom, onComplete, language]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-2xl">

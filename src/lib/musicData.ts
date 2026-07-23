@@ -9299,10 +9299,14 @@ export function getWordsByDifficulty(difficulty: Difficulty | string): WordEntry
 
 /**
  * Looks up a word entry by text (case-insensitive).
+ * Searches both the English WORD_BANK and the Portuguese WORSHIP_WORDS_PT bank,
+ * so a word's curated songHints are found regardless of which language it belongs to.
  */
 export function getWordByText(wordText: string): WordEntry | undefined {
   const normalized = wordText.trim().toLowerCase();
-  return WORD_BANK.find(w => w.word.toLowerCase() === normalized);
+  const enMatch = WORD_BANK.find(w => w.word.toLowerCase() === normalized);
+  if (enMatch) return enMatch;
+  return WORSHIP_WORDS_PT.find(w => w.word.toLowerCase() === normalized);
 }
 
 import { WORSHIP_WORDS_PT, getRandomWordPT } from "./musicDataPT";
