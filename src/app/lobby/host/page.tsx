@@ -186,14 +186,14 @@ function HostContent() {
             </AnimatePresence>
 
             <Scoreboard
-              players={room.players}
-              currentTurnIndex={room.gameState.currentTurnIndex}
+              players={room?.players || []}
+              currentTurnIndex={room?.gameState?.currentTurnIndex || 0}
               onUpdateScore={(id, delta) => updateScore(roomCode, id, delta)}
             />
 
             <CircularTimer
-              timeRemaining={room.gameState.timeRemaining}
-              totalTime={room.settings.timerDuration}
+              timeRemaining={room?.gameState?.timeRemaining ?? 30}
+              totalTime={room?.settings?.timerDuration ?? 30}
             />
 
             {currentWord && <WordCard wordEntry={currentWord} />}
