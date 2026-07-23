@@ -13,10 +13,11 @@ import { SongHintAccordion } from "@/components/SongHintAccordion";
 import { Scoreboard, PlayerScore } from "@/components/Scoreboard";
 import { CountdownOverlay } from "@/components/CountdownOverlay";
 import { PartyNavbar } from "@/components/PartyNavbar";
+import { TimerSelector } from "@/components/TimerSelector";
 
 function GameContent() {
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || "pass";
 
   // Game Settings & State
@@ -26,6 +27,11 @@ function GameContent() {
   const [gameState, setGameState] = useState<"ready" | "playing" | "buzz" | "timeout" | "ended">("ready");
   
   const [timeRemaining, setTimeRemaining] = useState<number>(30);
+
+  const handleTimerChange = (newDuration: number) => {
+    setTimerDuration(newDuration);
+    setTimeRemaining(newDuration);
+  };
   const [usedWordIds, setUsedWordIds] = useState<Set<string>>(new Set());
   const [currentWord, setCurrentWord] = useState<WordEntry | null>(null);
 
@@ -151,6 +157,14 @@ function GameContent() {
             onUpdateScore={handleUpdateScore}
           />
         )}
+
+        {/* Timer Selector Options */}
+        <div className="w-full max-w-md bg-slate-900/60 p-4 rounded-2xl border border-slate-800 backdrop-blur-md">
+          <TimerSelector
+            selectedDuration={timerDuration}
+            onSelectDuration={handleTimerChange}
+          />
+        </div>
 
         {/* Circular Countdown Timer */}
         <div className="my-2">

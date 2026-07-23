@@ -14,6 +14,8 @@ import { SongHintAccordion } from "@/components/SongHintAccordion";
 import { Scoreboard } from "@/components/Scoreboard";
 import { PartyNavbar } from "@/components/PartyNavbar";
 
+import { TimerSelector } from "@/components/TimerSelector";
+
 function HostContent() {
   const router = useRouter();
   const {
@@ -40,7 +42,7 @@ function HostContent() {
   // Initialize Host Room (preserve roomCode across reconnects)
   useEffect(() => {
     if (connected) {
-      createRoom({ roomCode: roomCodeRef.current || undefined, timerDuration: 30, categoryFilter: "All" }).then((res) => {
+      createRoom({ roomCode: roomCodeRef.current || undefined, timerDuration, categoryFilter: "All" }).then((res) => {
         if (res.success && res.roomCode) {
           roomCodeRef.current = res.roomCode;
           setRoomCode(res.roomCode);
@@ -48,6 +50,13 @@ function HostContent() {
       });
     }
   }, [connected]);
+
+  const handleTimerChange = (newDuration: number) => {
+    setTimerDuration(newDuration);
+    if (roomCode) {
+      updateSettings(roomCode, { timerDuration: newDuration });
+    }
+  };
 
   // Load new word when game starts or turns change
   useEffect(() => {
@@ -129,7 +138,7 @@ function HostContent() {
               </div>
 
               {/* Connected Players Grid */}
-              <div className="grid grid-cols-2 gap-2 mb-8 max-h-36 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-2 mb-6 max-h-36 overflow-y-auto">
                 {room?.players.map((player) => (
                   <div
                     key={player.id}
@@ -139,6 +148,14 @@ function HostContent() {
                     <span className="truncate">{player.name}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Selectable Timer Presets with Descriptions */}
+              <div className="mb-8">
+                <TimerSelector
+                  selectedDuration={timerDuration}
+                  onSelectDuration={handleTimerChange}
+                />
               </div>
 
               <button
