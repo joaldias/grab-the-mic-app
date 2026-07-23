@@ -44,6 +44,10 @@ export function useSocket() {
 
     socketRef.current = socket;
 
+    if (socket.connected) {
+      setConnected(true);
+    }
+
     socket.on("connect", () => {
       setConnected(true);
     });
