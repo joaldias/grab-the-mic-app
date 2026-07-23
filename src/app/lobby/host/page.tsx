@@ -30,17 +30,19 @@ function HostContent() {
   } = useSocket();
 
   const [roomCode, setRoomCode] = useState<string>("");
+  const roomCodeRef = useRef<string>("");
   const [currentWord, setCurrentWord] = useState<WordEntry | null>(null);
   const [timerDuration, setTimerDuration] = useState<number>(30);
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [usedWordIds, setUsedWordIds] = useState<Set<string>>(new Set());
   const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
 
-  // Initialize Host Room
+  // Initialize Host Room (preserve roomCode across reconnects)
   useEffect(() => {
-    if (connected && !roomCode) {
-      createRoom({ timerDuration: 30, categoryFilter: "All" }).then((res) => {
+    if (connected) {
+      createRoom({ roomCode: roomCodeRef.current || undefined, timerDuration: 30, categoryFilter: "All" }).then((res) => {
         if (res.success && res.roomCode) {
+          roomCodeRef.current = res.roomCode;
           setRoomCode(res.roomCode);
         }
       });

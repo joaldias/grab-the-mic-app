@@ -7,6 +7,7 @@ export interface GameSettings {
   timerDuration: number;
   hintDelay: number;
   categoryFilter: string;
+  roomCode?: string;
 }
 
 export interface Player {
