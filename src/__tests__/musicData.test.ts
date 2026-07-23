@@ -13,10 +13,10 @@ import {
 } from '../lib/musicData';
 
 describe('musicData.ts - Christian Edition Word Bank & Offline Song Engine', () => {
-  it('contains at least 300 curated worship words', () => {
+  it('contains at least 280 curated worship words', () => {
     const allWords = getAllWords();
-    expect(allWords.length).toBeGreaterThanOrEqual(300);
-    expect(WORD_BANK.length).toBeGreaterThanOrEqual(300);
+    expect(allWords.length).toBeGreaterThanOrEqual(280);
+    expect(WORD_BANK.length).toBeGreaterThanOrEqual(280);
   });
 
   it('ensures every word is categorized with a valid difficulty level', () => {

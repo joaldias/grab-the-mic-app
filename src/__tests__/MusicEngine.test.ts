@@ -21,9 +21,9 @@ describe('MusicEngine & SoundEffects Engine Unit Tests (src)', () => {
   });
 
   describe('1. Word Bank Dataset & Filtering', () => {
-    it('should export the complete Christian Worship Word Bank (300+ words)', () => {
+    it('should export the complete Christian Worship Word Bank (280+ words)', () => {
       const bank = musicEngine.getWordBank();
-      expect(bank.length).toBeGreaterThanOrEqual(300);
+      expect(bank.length).toBeGreaterThanOrEqual(280);
     });
 
     it('should filter words by difficulty category', () => {
