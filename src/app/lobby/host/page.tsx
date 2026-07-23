@@ -66,6 +66,11 @@ function HostContent() {
 
   const handleStartGame = () => {
     if (roomCode) {
+      const word = getRandomWord(Array.from(usedWordIds), categoryFilter as any);
+      if (word) {
+        setCurrentWord(word);
+        setUsedWordIds((prev) => new Set(prev).add(word.id));
+      }
       startGame(roomCode);
     }
   };
@@ -111,7 +116,7 @@ function HostContent() {
 
               <div className="space-y-2 mb-6">
                 <p className="text-sm text-cyan-100/80">
-                  Players visit <span className="font-mono text-cyan-300 font-bold">/lobby/player</span> on their mobile browser to enter this code.
+                  Players visit <span className="font-mono text-cyan-300 font-bold">/lobby/player</span> on their mobile browser or Expo Go to enter this code.
                 </p>
                 <div className="flex items-center justify-center space-x-2 text-slate-400 text-xs font-semibold">
                   <Users className="w-4 h-4 text-purple-400" />
@@ -134,8 +139,7 @@ function HostContent() {
 
               <button
                 onClick={handleStartGame}
-                disabled={!room || room.players.length === 0}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-400 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-slate-950 font-black text-xl shadow-[0_0_30px_rgba(0,240,255,0.6)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-400 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-slate-950 font-black text-xl shadow-[0_0_30px_rgba(0,240,255,0.6)] transition-all active:scale-95 flex items-center justify-center space-x-3 cursor-pointer"
               >
                 <Play className="w-6 h-6 fill-current" />
                 <span>START PARTY GAME</span>
