@@ -16,6 +16,7 @@ import { PartyNavbar } from "@/components/PartyNavbar";
 
 import { TimerSelector } from "@/components/TimerSelector";
 import { LevelSelector } from "@/components/LevelSelector";
+import { LanguageSelector, Language } from "@/components/LanguageSelector";
 
 function HostContent() {
   const router = useRouter();
@@ -37,6 +38,7 @@ function HostContent() {
   const [currentWord, setCurrentWord] = useState<WordEntry | null>(null);
   const [timerDuration, setTimerDuration] = useState<number>(30);
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
+  const [language, setLanguage] = useState<Language>("en");
   const [usedWordIds, setUsedWordIds] = useState<Set<string>>(new Set());
   const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
 
@@ -69,13 +71,13 @@ function HostContent() {
   // Load new word when game starts or turns change
   useEffect(() => {
     if ((isGameStarted || room?.gameState.status === 'playing') && !currentWord) {
-      const word = getRandomWord(Array.from(usedWordIds), categoryFilter as any);
+      const word = getRandomWord(Array.from(usedWordIds), categoryFilter as any, language);
       if (word) {
         setCurrentWord(word);
         setUsedWordIds((prev) => new Set(prev).add(word.id));
       }
     }
-  }, [room?.gameState.status, isGameStarted]);
+  }, [room?.gameState.status, isGameStarted, language]);
 
   // Handle buzzer SFX
   useEffect(() => {
@@ -102,7 +104,7 @@ function HostContent() {
 
   const handleStartGame = () => {
     setIsGameStarted(true);
-    const word = getRandomWord(Array.from(usedWordIds), categoryFilter as any);
+    const word = getRandomWord(Array.from(usedWordIds), categoryFilter as any, language);
     if (word) {
       setCurrentWord(word);
       setUsedWordIds((prev) => new Set(prev).add(word.id));
@@ -114,7 +116,7 @@ function HostContent() {
 
   const handleNextTurn = () => {
     if (!roomCode) return;
-    const nextWord = getRandomWord(Array.from(usedWordIds), categoryFilter as any);
+    const nextWord = getRandomWord(Array.from(usedWordIds), categoryFilter as any, language);
     if (nextWord) {
       setCurrentWord(nextWord);
       setUsedWordIds((prev) => new Set(prev).add(nextWord.id));
@@ -174,8 +176,18 @@ function HostContent() {
                 ))}
               </div>
 
-              {/* Selectable Level & Timer Presets with Descriptions */}
+              {/* Selectable Language, Level & Timer Presets with Descriptions */}
               <div className="space-y-6 mb-8">
+                <div className="flex justify-center">
+                  <LanguageSelector
+                    selectedLanguage={language}
+                    onSelectLanguage={(lang) => {
+                      setLanguage(lang);
+                      setCurrentWord(null);
+                    }}
+                  />
+                </div>
+
                 <LevelSelector
                   selectedLevel={categoryFilter}
                   onSelectLevel={handleCategoryChange}

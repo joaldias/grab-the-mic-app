@@ -15,6 +15,7 @@ import { CountdownOverlay } from "@/components/CountdownOverlay";
 import { PartyNavbar } from "@/components/PartyNavbar";
 import { TimerSelector } from "@/components/TimerSelector";
 import { LevelSelector } from "@/components/LevelSelector";
+import { LanguageSelector, Language } from "@/components/LanguageSelector";
 
 function GameContent() {
   const router = useRouter();
@@ -24,6 +25,7 @@ function GameContent() {
   // Game Settings & State
   const [timerDuration, setTimerDuration] = useState<number>(30);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("All");
+  const [language, setLanguage] = useState<Language>("en");
   const [showCountdown, setShowCountdown] = useState<boolean>(true);
   const [gameState, setGameState] = useState<"ready" | "playing" | "buzz" | "timeout" | "ended">("ready");
   
@@ -36,7 +38,7 @@ function GameContent() {
 
   const handleLevelChange = (newLevel: string) => {
     setSelectedDifficulty(newLevel);
-    const word = getRandomWord(Array.from(usedWordIds), newLevel as any);
+    const word = getRandomWord(Array.from(usedWordIds), newLevel as any, language);
     if (word) {
       setCurrentWord(word);
     }
@@ -167,8 +169,18 @@ function GameContent() {
           />
         )}
 
-        {/* Level & Timer Selector Options */}
+        {/* Language, Level & Timer Selector Options */}
         <div className="w-full max-w-2xl bg-slate-900/60 p-4 rounded-2xl border border-slate-800 backdrop-blur-md space-y-4">
+          <div className="flex justify-center">
+            <LanguageSelector
+              selectedLanguage={language}
+              onSelectLanguage={(lang) => {
+                setLanguage(lang);
+                const word = getRandomWord(Array.from(usedWordIds), selectedDifficulty as any, lang);
+                if (word) setCurrentWord(word);
+              }}
+            />
+          </div>
           <LevelSelector
             selectedLevel={selectedDifficulty}
             onSelectLevel={handleLevelChange}

@@ -9305,10 +9305,28 @@ export function getWordByText(wordText: string): WordEntry | undefined {
   return WORD_BANK.find(w => w.word.toLowerCase() === normalized);
 }
 
+import { WORSHIP_WORDS_PT, getRandomWordPT } from "./musicDataPT";
+
 /**
- * Gets a random word, optionally filtered by difficulty.
+ * Gets a random word from the Christian Edition bank.
  */
-export function getRandomWord(excludeIdsOrDifficulty?: string[] | Difficulty | "All", difficultyParam?: Difficulty | "All"): WordEntry {
+export function getRandomWord(
+  excludeIdsOrDifficulty?: string[] | Difficulty | "All",
+  difficultyParam?: Difficulty | "All",
+  language: "en" | "pt" = "en"
+): WordEntry {
+  if (language === "pt") {
+    let excludeIds: string[] = Array.isArray(excludeIdsOrDifficulty) ? excludeIdsOrDifficulty : [];
+    let diff: Difficulty | undefined = undefined;
+    if (Array.isArray(excludeIdsOrDifficulty)) {
+      if (difficultyParam && difficultyParam !== "All") diff = difficultyParam as Difficulty;
+    } else if (typeof excludeIdsOrDifficulty === 'string' && excludeIdsOrDifficulty !== 'All') {
+      diff = excludeIdsOrDifficulty as Difficulty;
+    }
+    const ptWord = getRandomWordPT(excludeIds, diff);
+    if (ptWord) return ptWord;
+  }
+
   let excludeIds: string[] = [];
   let difficulty: Difficulty | undefined = undefined;
 
