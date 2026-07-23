@@ -50,12 +50,14 @@ app.prepare().then(() => {
   io.on('connection', (socket) => {
     console.log('A client connected:', socket.id);
 
-    // Host creates a room
-    socket.on('create_room', (settings, callback) => {
-      let roomCode;
-      do {
-        roomCode = generateRoomCode();
-      } while (rooms.has(roomCode));
+    // Host creates a room (supports 'create_room' and 'host:create-room')
+    const handleCreateRoom = (settings, callback) => {
+      let roomCode = settings?.roomCode?.toUpperCase()?.trim();
+      if (!roomCode || rooms.has(roomCode)) {
+        do {
+          roomCode = generateRoomCode();
+        } while (rooms.has(roomCode));
+      }
 
       const newRoom = {
         roomCode,
@@ -82,70 +84,91 @@ app.prepare().then(() => {
       if (typeof callback === 'function') {
         callback({ success: true, roomCode, room: newRoom });
       }
-    });
+    };
 
-    // Player joins a room
-    socket.on('join_room', ({ roomCode, playerName }, callback) => {
-      roomCode = roomCode?.toUpperCase();
-      const room = rooms.get(roomCode);
+    socket.on('create_room', handleCreateRoom);
+    socket.on('host:create-room', handleCreateRoom);
+
+    // Player joins a room (supports 'join_room' and 'player:join-room')
+    const handleJoinRoom = ({ roomCode, playerName, name }, callback) => {
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = rooms.get(code);
 
       if (!room) {
         if (typeof callback === 'function') callback({ success: false, message: 'Room not found' });
         return;
       }
 
-      const player = {
-        id: socket.id,
-        name: playerName || `Player ${room.players.length + 1}`,
-        score: 0
-      };
-
-      room.players.push(player);
-      socket.join(roomCode);
+      const playerNickname = (playerName || name || '').trim() || `Player ${room.players.length + 1}`;
       
+      let player = room.players.find(p => p.id === socket.id);
+      if (!player) {
+        player = {
+          id: socket.id,
+          name: playerNickname,
+          score: 0
+        };
+        room.players.push(player);
+      } else {
+        player.name = playerNickname;
+      }
+
+      socket.join(code);
+      
+      console.log(`[Player Joined] Room: ${code} | Player: ${player.name} (${socket.id})`);
+
       // Notify host and other players
-      io.to(roomCode).emit('room_updated', room);
+      io.to(code).emit('room_updated', room);
+      io.to(code).emit('player:joined', { player, room });
       
       if (typeof callback === 'function') {
-        callback({ success: true, room });
+        callback({ success: true, room, player });
       }
-    });
+    };
+
+    socket.on('join_room', handleJoinRoom);
+    socket.on('player:join-room', handleJoinRoom);
 
     // Host updates settings
     socket.on('update_settings', ({ roomCode, settings }) => {
-      const room = rooms.get(roomCode);
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = rooms.get(code);
       if (room && room.hostId === socket.id) {
         room.settings = { ...room.settings, ...settings };
-        // Sync timeRemaining if timer duration changed in lobby
         if (room.gameState.status === 'lobby' && settings.timerDuration) {
           room.gameState.timeRemaining = settings.timerDuration;
         }
-        io.to(roomCode).emit('room_updated', room);
+        io.to(code).emit('room_updated', room);
       }
     });
 
     // Start game
     socket.on('start_game', ({ roomCode }) => {
-      const room = rooms.get(roomCode);
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = rooms.get(code);
       if (room && room.hostId === socket.id) {
         room.gameState.status = 'playing';
-        io.to(roomCode).emit('game_started', room);
+        io.to(code).emit('game_started', room);
       }
     });
 
     // Player buzzes in ("Grabbed the Mic!")
-    socket.on('buzz_in', ({ roomCode }) => {
-      const room = rooms.get(roomCode);
+    const handleBuzzIn = ({ roomCode, playerName }) => {
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = rooms.get(code);
       if (!room) return;
 
-      if (room.gameState.status === 'playing' && !room.gameState.buzzedPlayerId) {
-        const player = room.players.find(p => p.id === socket.id);
-        if (player) {
-          room.gameState.buzzedPlayerId = socket.id;
-          io.to(roomCode).emit('buzzed', { playerId: socket.id, playerName: player.name });
-        }
+      if (!room.gameState.buzzedPlayerId) {
+        const player = room.players.find(p => p.id === socket.id) || { id: socket.id, name: playerName || 'Player' };
+        room.gameState.buzzedPlayerId = socket.id;
+        
+        io.to(code).emit('buzzed', { playerId: socket.id, playerName: player.name });
+        io.to(code).emit('player:buzz', { playerId: socket.id, playerName: player.name });
       }
-    });
+    };
+
+    socket.on('buzz_in', handleBuzzIn);
+    socket.on('player:buzz', handleBuzzIn);
 
     // Host clears buzz
     socket.on('clear_buzz', ({ roomCode }) => {
