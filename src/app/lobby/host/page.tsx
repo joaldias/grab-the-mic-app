@@ -15,6 +15,7 @@ import { Scoreboard } from "@/components/Scoreboard";
 import { PartyNavbar } from "@/components/PartyNavbar";
 
 import { TimerSelector } from "@/components/TimerSelector";
+import { LevelSelector } from "@/components/LevelSelector";
 
 function HostContent() {
   const router = useRouter();
@@ -42,7 +43,7 @@ function HostContent() {
   // Initialize Host Room (preserve roomCode across reconnects)
   useEffect(() => {
     if (connected) {
-      createRoom({ roomCode: roomCodeRef.current || undefined, timerDuration, categoryFilter: "All" }).then((res) => {
+      createRoom({ roomCode: roomCodeRef.current || undefined, timerDuration, categoryFilter }).then((res) => {
         if (res.success && res.roomCode) {
           roomCodeRef.current = res.roomCode;
           setRoomCode(res.roomCode);
@@ -55,6 +56,13 @@ function HostContent() {
     setTimerDuration(newDuration);
     if (roomCode) {
       updateSettings(roomCode, { timerDuration: newDuration });
+    }
+  };
+
+  const handleCategoryChange = (newCategory: string) => {
+    setCategoryFilter(newCategory);
+    if (roomCode) {
+      updateSettings(roomCode, { categoryFilter: newCategory });
     }
   };
 
@@ -166,8 +174,13 @@ function HostContent() {
                 ))}
               </div>
 
-              {/* Selectable Timer Presets with Descriptions */}
-              <div className="mb-8">
+              {/* Selectable Level & Timer Presets with Descriptions */}
+              <div className="space-y-6 mb-8">
+                <LevelSelector
+                  selectedLevel={categoryFilter}
+                  onSelectLevel={handleCategoryChange}
+                />
+
                 <TimerSelector
                   selectedDuration={timerDuration}
                   onSelectDuration={handleTimerChange}

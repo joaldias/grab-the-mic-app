@@ -14,6 +14,7 @@ import { Scoreboard, PlayerScore } from "@/components/Scoreboard";
 import { CountdownOverlay } from "@/components/CountdownOverlay";
 import { PartyNavbar } from "@/components/PartyNavbar";
 import { TimerSelector } from "@/components/TimerSelector";
+import { LevelSelector } from "@/components/LevelSelector";
 
 function GameContent() {
   const router = useRouter();
@@ -31,6 +32,14 @@ function GameContent() {
   const handleTimerChange = (newDuration: number) => {
     setTimerDuration(newDuration);
     setTimeRemaining(newDuration);
+  };
+
+  const handleLevelChange = (newLevel: string) => {
+    setSelectedDifficulty(newLevel);
+    const word = getRandomWord(Array.from(usedWordIds), newLevel as any);
+    if (word) {
+      setCurrentWord(word);
+    }
   };
   const [usedWordIds, setUsedWordIds] = useState<Set<string>>(new Set());
   const [currentWord, setCurrentWord] = useState<WordEntry | null>(null);
@@ -158,8 +167,12 @@ function GameContent() {
           />
         )}
 
-        {/* Timer Selector Options */}
-        <div className="w-full max-w-md bg-slate-900/60 p-4 rounded-2xl border border-slate-800 backdrop-blur-md">
+        {/* Level & Timer Selector Options */}
+        <div className="w-full max-w-2xl bg-slate-900/60 p-4 rounded-2xl border border-slate-800 backdrop-blur-md space-y-4">
+          <LevelSelector
+            selectedLevel={selectedDifficulty}
+            onSelectLevel={handleLevelChange}
+          />
           <TimerSelector
             selectedDuration={timerDuration}
             onSelectDuration={handleTimerChange}
