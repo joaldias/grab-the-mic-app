@@ -208,8 +208,8 @@ function HostContent() {
             {currentWord && (
               <SongHintAccordion
                 word={currentWord.word}
-                timeRemaining={room.gameState.timeRemaining}
-                totalTime={room.settings.timerDuration}
+                timeRemaining={room?.gameState?.timeRemaining ?? 30}
+                totalTime={room?.settings?.timerDuration ?? 30}
               />
             )}
           </div>
