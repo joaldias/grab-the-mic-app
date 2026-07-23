@@ -149,6 +149,33 @@ app.prepare().then(() => {
       }
     });
 
+    const startRoomTimer = (code) => {
+      const room = rooms.get(code);
+      if (!room) return;
+      if (room.timerInterval) clearInterval(room.timerInterval);
+
+      room.timerInterval = setInterval(() => {
+        const currentRoom = rooms.get(code);
+        if (!currentRoom || currentRoom.gameState.status !== 'playing') {
+          if (currentRoom?.timerInterval) clearInterval(currentRoom.timerInterval);
+          return;
+        }
+
+        // Pause timer if someone grabbed the mic (buzzed in)
+        if (currentRoom.gameState.buzzedPlayerId) {
+          return;
+        }
+
+        if (currentRoom.gameState.timeRemaining > 0) {
+          currentRoom.gameState.timeRemaining -= 1;
+          io.to(code).emit('timer_sync', { timeRemaining: currentRoom.gameState.timeRemaining });
+          io.to(code).emit('room_updated', currentRoom);
+        } else {
+          io.to(code).emit('time_out', { roomCode: code });
+        }
+      }, 1000);
+    };
+
     // Start game
     socket.on('start_game', ({ roomCode }) => {
       const code = (roomCode || '').toUpperCase().trim();
@@ -156,67 +183,24 @@ app.prepare().then(() => {
       if (room) {
         room.hostId = socket.id;
         room.gameState.status = 'playing';
+        room.gameState.timeRemaining = room.settings.timerDuration || 30;
         io.to(code).emit('game_started', room);
         io.to(code).emit('room_updated', room);
-      }
-    });
-
-    // Player buzzes in ("Grabbed the Mic!")
-    const handleBuzzIn = ({ roomCode, playerName }) => {
-      const code = (roomCode || '').toUpperCase().trim();
-      const room = rooms.get(code);
-      if (!room) return;
-
-      if (!room.gameState.buzzedPlayerId) {
-        const player = room.players.find(p => p.id === socket.id) || { id: socket.id, name: playerName || 'Player' };
-        room.gameState.buzzedPlayerId = socket.id;
-        
-        io.to(code).emit('buzzed', { playerId: socket.id, playerName: player.name });
-        io.to(code).emit('player:buzz', { playerId: socket.id, playerName: player.name });
-      }
-    };
-
-    socket.on('buzz_in', handleBuzzIn);
-    socket.on('player:buzz', handleBuzzIn);
-
-    // Host clears buzz
-    socket.on('clear_buzz', ({ roomCode }) => {
-       const room = rooms.get(roomCode);
-       if (room && room.hostId === socket.id) {
-         room.gameState.buzzedPlayerId = null;
-         io.to(roomCode).emit('buzz_cleared', room);
-       }
-    });
-
-    // Host updates score
-    socket.on('update_score', ({ roomCode, playerId, scoreDelta }) => {
-      const room = rooms.get(roomCode);
-      if (room && room.hostId === socket.id) {
-        const player = room.players.find(p => p.id === playerId);
-        if (player) {
-          player.score += scoreDelta;
-          io.to(roomCode).emit('room_updated', room);
-        }
-      }
-    });
-    
-    // Timer sync from host
-    socket.on('sync_timer', ({ roomCode, timeRemaining }) => {
-      const room = rooms.get(roomCode);
-      if (room && room.hostId === socket.id) {
-        room.gameState.timeRemaining = timeRemaining;
-        socket.to(roomCode).emit('timer_sync', { timeRemaining });
+        startRoomTimer(code);
       }
     });
 
     // Next turn
     socket.on('next_turn', ({ roomCode }) => {
-      const room = rooms.get(roomCode);
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = rooms.get(code);
       if (room && room.hostId === socket.id) {
         room.gameState.currentTurnIndex = (room.gameState.currentTurnIndex + 1) % Math.max(1, room.players.length);
         room.gameState.buzzedPlayerId = null;
         room.gameState.timeRemaining = room.settings.timerDuration;
-        io.to(roomCode).emit('turn_changed', room);
+        io.to(code).emit('turn_changed', room);
+        io.to(code).emit('room_updated', room);
+        startRoomTimer(code);
       }
     });
 

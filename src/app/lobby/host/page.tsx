@@ -76,6 +76,22 @@ function HostContent() {
     }
   }, [buzzedInfo]);
 
+  // Local timer sync tick fallback
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if ((isGameStarted || room?.gameState.status === 'playing') && !buzzedInfo) {
+      timer = setInterval(() => {
+        const current = room?.gameState?.timeRemaining ?? timerDuration;
+        if (current > 0) {
+          syncTimer(roomCode, current - 1);
+        }
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isGameStarted, room?.gameState.status, buzzedInfo, roomCode, room?.gameState?.timeRemaining]);
+
   const handleStartGame = () => {
     setIsGameStarted(true);
     const word = getRandomWord(Array.from(usedWordIds), categoryFilter as any);
