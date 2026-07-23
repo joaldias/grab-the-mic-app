@@ -134,9 +134,6 @@ function PlayerContent() {
               <span className="text-2xl md:text-3xl font-black tracking-tight text-white uppercase drop-shadow-md">
                 GRAB THE MIC!
               </span>
-              <span className="text-xs font-semibold text-pink-200 mt-1 uppercase tracking-wider">
-                {room?.gameState.status === 'playing' ? "TAP TO BUZZ IN" : "WAITING FOR TURN"}
-              </span>
             </motion.button>
 
             {buzzedInfo && (
@@ -152,9 +149,7 @@ function PlayerContent() {
         )}
       </main>
 
-      <footer className="w-full text-center py-3 text-xs text-slate-500 font-medium z-10 border-t border-slate-900">
-        Mobile Buzzer Client • Tap as soon as you know the worship song!
-      </footer>
+
     </div>
   );
 }
